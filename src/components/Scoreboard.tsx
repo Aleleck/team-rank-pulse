@@ -2,6 +2,21 @@ import { useEffect, useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Papa from 'papaparse';
 import { Trophy, Medal, Award } from 'lucide-react';
+import brazilFlag from '@/assets/flags/brazil.png';
+import colombiaFlag from '@/assets/flags/colombia.png';
+import haitiFlag from '@/assets/flags/haiti.png';
+
+const TEAM_FLAGS: Record<string, string> = {
+  'Mesa 1': brazilFlag,
+  'Mesa 2': colombiaFlag,
+  'Mesa 3': haitiFlag,
+};
+
+const TEAM_COUNTRIES: Record<string, string> = {
+  'Mesa 1': 'BRASIL',
+  'Mesa 2': 'COLOMBIA',
+  'Mesa 3': 'HAITÍ',
+};
 
 interface Team {
   name: string;
@@ -177,7 +192,7 @@ export const Scoreboard = () => {
         className="text-center mb-8 lg:mb-16"
       >
         <h1 className="font-display text-6xl lg:text-8xl xl:text-9xl text-foreground tracking-wider text-glow-gold">
-          RANKING EN VIVO
+          MUNDIAL GLOBAL
         </h1>
         <div className="flex items-center justify-center gap-3 mt-4">
           <motion.div 
@@ -224,15 +239,31 @@ export const Scoreboard = () => {
                     whileHover={{ scale: 1.02 }}
                     transition={{ type: "spring", stiffness: 300 }}
                   >
+                    {/* Flag */}
+                    {TEAM_FLAGS[team.name] && (
+                      <div className="mb-4 flex justify-center">
+                        <img 
+                          src={TEAM_FLAGS[team.name]} 
+                          alt={TEAM_COUNTRIES[team.name] || team.name}
+                          className="w-24 h-16 lg:w-32 lg:h-20 object-cover rounded-lg shadow-lg border-2 border-white/30"
+                        />
+                      </div>
+                    )}
+                    
                     {/* Rank Icon */}
-                    <div className={`${config.textColor} mb-4 flex justify-center`}>
+                    <div className={`${config.textColor} mb-2 flex justify-center`}>
                       <RankIcon rank={actualRank} />
                     </div>
                     
-                    {/* Team Name */}
-                    <h2 className={`font-display text-3xl lg:text-5xl xl:text-6xl tracking-wider ${config.textColor} mb-2`}>
-                      {team.name.toUpperCase()}
+                    {/* Country Name */}
+                    <h2 className={`font-display text-3xl lg:text-5xl xl:text-6xl tracking-wider ${config.textColor} mb-1`}>
+                      {TEAM_COUNTRIES[team.name] || team.name.toUpperCase()}
                     </h2>
+                    
+                    {/* Mesa Label */}
+                    <p className={`text-sm lg:text-base ${config.textColor} opacity-60 font-medium mb-2`}>
+                      {team.name}
+                    </p>
                     
                     {/* Score */}
                     <motion.div
