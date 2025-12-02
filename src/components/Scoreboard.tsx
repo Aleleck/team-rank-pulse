@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Papa from 'papaparse';
-import { Trophy, Medal, Award, TrendingUp } from 'lucide-react';
+import { Trophy, Medal, Award } from 'lucide-react';
 
 interface Team {
   name: string;
@@ -10,50 +10,62 @@ interface Team {
 }
 
 const SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQny2PUN0I8Yf5RA0pbx5QyYjugUKTLhFSbuCSq4RWb0aCKGeLelTKXAGZE_ivHvPFJyL7ZyCVEuRmd/pub?output=csv";
-const REFRESH_INTERVAL = 5000; // 5 seconds
+const REFRESH_INTERVAL = 5000;
 
 const RankIcon = ({ rank }: { rank: number }) => {
   switch (rank) {
     case 1:
-      return <Trophy className="w-16 h-16 text-primary-foreground" />;
+      return <Trophy className="w-12 h-12 lg:w-16 lg:h-16" />;
     case 2:
-      return <Medal className="w-14 h-14 text-secondary-foreground" />;
+      return <Medal className="w-10 h-10 lg:w-14 lg:h-14" />;
     case 3:
-      return <Award className="w-14 h-14 text-primary-foreground" />;
+      return <Award className="w-10 h-10 lg:w-14 lg:h-14" />;
     default:
       return null;
   }
 };
 
-const getRankStyles = (rank: number) => {
+const getRankConfig = (rank: number) => {
   switch (rank) {
     case 1:
       return {
-        card: 'card-gold',
-        text: 'text-glow-gold',
-        textColor: 'text-primary-foreground',
-        rankBg: 'bg-primary-foreground/20',
+        podiumHeight: 'h-48 lg:h-64',
+        textColor: 'text-amber-900',
+        bgGradient: 'from-amber-300 via-yellow-400 to-amber-500',
+        glowColor: 'shadow-[0_0_60px_rgba(251,191,36,0.6)]',
+        numberColor: 'text-amber-600',
+        order: 'order-2',
+        scale: 1.1,
       };
     case 2:
       return {
-        card: 'card-silver',
-        text: 'text-glow-silver',
-        textColor: 'text-secondary-foreground',
-        rankBg: 'bg-secondary-foreground/20',
+        podiumHeight: 'h-36 lg:h-48',
+        textColor: 'text-slate-700',
+        bgGradient: 'from-slate-200 via-gray-300 to-slate-400',
+        glowColor: 'shadow-[0_0_40px_rgba(148,163,184,0.5)]',
+        numberColor: 'text-slate-500',
+        order: 'order-1',
+        scale: 1,
       };
     case 3:
       return {
-        card: 'card-bronze',
-        text: 'text-glow-bronze',
-        textColor: 'text-primary-foreground',
-        rankBg: 'bg-primary-foreground/20',
+        podiumHeight: 'h-28 lg:h-40',
+        textColor: 'text-orange-900',
+        bgGradient: 'from-orange-300 via-amber-600 to-orange-700',
+        glowColor: 'shadow-[0_0_40px_rgba(234,88,12,0.4)]',
+        numberColor: 'text-orange-600',
+        order: 'order-3',
+        scale: 1,
       };
     default:
       return {
-        card: 'bg-card',
-        text: '',
+        podiumHeight: 'h-24',
         textColor: 'text-foreground',
-        rankBg: 'bg-muted',
+        bgGradient: 'from-muted to-muted',
+        glowColor: '',
+        numberColor: 'text-muted-foreground',
+        order: '',
+        scale: 1,
       };
   }
 };
@@ -70,29 +82,34 @@ export const Scoreboard = () => {
       const csvText = await response.text();
       
       Papa.parse(csvText, {
-        header: true,
+        header: false,
         skipEmptyLines: true,
         complete: (results) => {
-          const parsedTeams: Team[] = results.data
-            .map((row: any) => {
-              const name = row['Equipo'] || row['Team'] || row['Nombre'] || Object.values(row)[0];
-              const scoreValue = row['Puntaje'] || row['Score'] || row['Puntos'] || row['Total'] || Object.values(row)[1];
-              const score = parseInt(String(scoreValue).replace(/[^0-9.-]/g, ''), 10) || 0;
-              return { name: String(name || '').trim(), score };
-            })
-            .filter((team: Team) => team.name && team.name.length > 0);
-
-          // Sort by score descending
-          const sortedTeams = [...parsedTeams].sort((a, b) => b.score - a.score);
+          const rows = results.data as string[][];
           
-          setTeams((prevTeams) => {
-            // Track previous ranks for animation
-            return sortedTeams.map((team) => {
-              const prevTeam = prevTeams.find(t => t.name === team.name);
-              const prevRank = prevTeam ? prevTeams.indexOf(prevTeam) + 1 : undefined;
-              return { ...team, previousRank: prevRank };
+          if (rows.length >= 2) {
+            // First row = team names, Second row = scores
+            const teamNames = rows[0];
+            const scores = rows[1];
+            
+            const parsedTeams: Team[] = teamNames
+              .map((name, index) => ({
+                name: String(name || '').trim(),
+                score: parseInt(String(scores[index] || '0').replace(/[^0-9.-]/g, ''), 10) || 0
+              }))
+              .filter(team => team.name.length > 0);
+
+            // Sort by score descending
+            const sortedTeams = [...parsedTeams].sort((a, b) => b.score - a.score);
+            
+            setTeams((prevTeams) => {
+              return sortedTeams.map((team) => {
+                const prevTeam = prevTeams.find(t => t.name === team.name);
+                const prevRank = prevTeam ? prevTeams.indexOf(prevTeam) + 1 : undefined;
+                return { ...team, previousRank: prevRank };
+              });
             });
-          });
+          }
           
           setLastUpdate(new Date());
           setLoading(false);
@@ -147,6 +164,9 @@ export const Scoreboard = () => {
     );
   }
 
+  // Reorder for podium display: 2nd, 1st, 3rd
+  const podiumOrder = [1, 0, 2].map(i => teams[i]).filter(Boolean);
+
   return (
     <div className="min-h-screen scoreboard-bg flex flex-col p-8 lg:p-12">
       {/* Header */}
@@ -154,7 +174,7 @@ export const Scoreboard = () => {
         initial={{ opacity: 0, y: -50 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
-        className="text-center mb-8 lg:mb-12"
+        className="text-center mb-8 lg:mb-16"
       >
         <h1 className="font-display text-6xl lg:text-8xl xl:text-9xl text-foreground tracking-wider text-glow-gold">
           RANKING EN VIVO
@@ -171,87 +191,80 @@ export const Scoreboard = () => {
         </div>
       </motion.header>
 
-      {/* Scoreboard */}
-      <div className="flex-1 flex items-center justify-center">
-        <div className="w-full max-w-7xl">
+      {/* Podium */}
+      <div className="flex-1 flex items-end justify-center pb-8">
+        <div className="flex items-end justify-center gap-4 lg:gap-8 w-full max-w-6xl">
           <AnimatePresence mode="popLayout">
-            <div className="grid gap-6 lg:gap-8">
-              {teams.slice(0, 3).map((team, index) => {
-                const rank = index + 1;
-                const styles = getRankStyles(rank);
-                const moved = team.previousRank && team.previousRank !== rank;
-                
-                return (
-                  <motion.div
-                    key={team.name}
-                    layout
-                    initial={{ opacity: 0, x: -100 }}
-                    animate={{ 
-                      opacity: 1, 
-                      x: 0,
-                      scale: moved ? [1, 1.02, 1] : 1,
-                    }}
-                    exit={{ opacity: 0, x: 100 }}
-                    transition={{ 
-                      type: "spring", 
-                      stiffness: 300, 
-                      damping: 30,
-                      layout: { duration: 0.5 }
-                    }}
-                    className={`${styles.card} rounded-2xl lg:rounded-3xl overflow-hidden`}
+            {podiumOrder.map((team, displayIndex) => {
+              const actualRank = teams.indexOf(team) + 1;
+              const config = getRankConfig(actualRank);
+              
+              return (
+                <motion.div
+                  key={team.name}
+                  layout
+                  initial={{ opacity: 0, y: 100 }}
+                  animate={{ 
+                    opacity: 1, 
+                    y: 0,
+                    scale: config.scale,
+                  }}
+                  exit={{ opacity: 0, y: 100 }}
+                  transition={{ 
+                    type: "spring", 
+                    stiffness: 200, 
+                    damping: 25,
+                    delay: displayIndex * 0.1
+                  }}
+                  className={`flex-1 max-w-sm ${config.order}`}
+                >
+                  {/* Team Info Card */}
+                  <motion.div 
+                    className={`bg-gradient-to-b ${config.bgGradient} rounded-t-3xl ${config.glowColor} p-6 lg:p-8 text-center`}
+                    whileHover={{ scale: 1.02 }}
+                    transition={{ type: "spring", stiffness: 300 }}
                   >
-                    <div className="flex items-center px-8 py-6 lg:px-12 lg:py-8">
-                      {/* Rank */}
-                      <div className={`${styles.rankBg} w-24 h-24 lg:w-32 lg:h-32 rounded-2xl flex items-center justify-center mr-8 lg:mr-12`}>
-                        <span className={`font-display text-6xl lg:text-8xl ${styles.textColor}`}>
-                          {rank}
-                        </span>
-                      </div>
-
-                      {/* Icon */}
-                      <div className="mr-8 lg:mr-12">
-                        <RankIcon rank={rank} />
-                      </div>
-
-                      {/* Team Name */}
-                      <div className="flex-1">
-                        <h2 className={`font-display text-5xl lg:text-7xl xl:text-8xl tracking-wider ${styles.textColor} ${styles.text}`}>
-                          {team.name.toUpperCase()}
-                        </h2>
-                        {moved && (
-                          <motion.div
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            className="flex items-center gap-2 mt-2"
-                          >
-                            <TrendingUp className={`w-5 h-5 ${team.previousRank! > rank ? 'text-green-400' : 'text-red-400 rotate-180'}`} />
-                            <span className={`text-sm font-medium ${team.previousRank! > rank ? 'text-green-400' : 'text-red-400'}`}>
-                              {team.previousRank! > rank ? 'Subió' : 'Bajó'} posición
-                            </span>
-                          </motion.div>
-                        )}
-                      </div>
-
-                      {/* Score */}
-                      <motion.div 
-                        key={team.score}
-                        initial={{ scale: 1 }}
-                        animate={{ scale: [1, 1.1, 1] }}
-                        transition={{ duration: 0.3 }}
-                        className="text-right"
-                      >
-                        <p className={`text-lg lg:text-xl ${styles.textColor} opacity-80 font-medium mb-1`}>
-                          PUNTOS
-                        </p>
-                        <p className={`font-display text-6xl lg:text-8xl xl:text-9xl ${styles.textColor} ${styles.text}`}>
-                          {team.score.toLocaleString()}
-                        </p>
-                      </motion.div>
+                    {/* Rank Icon */}
+                    <div className={`${config.textColor} mb-4 flex justify-center`}>
+                      <RankIcon rank={actualRank} />
                     </div>
+                    
+                    {/* Team Name */}
+                    <h2 className={`font-display text-3xl lg:text-5xl xl:text-6xl tracking-wider ${config.textColor} mb-2`}>
+                      {team.name.toUpperCase()}
+                    </h2>
+                    
+                    {/* Score */}
+                    <motion.div
+                      key={team.score}
+                      initial={{ scale: 1 }}
+                      animate={{ scale: [1, 1.15, 1] }}
+                      transition={{ duration: 0.4 }}
+                    >
+                      <p className={`font-display text-6xl lg:text-8xl xl:text-9xl ${config.textColor}`}>
+                        {team.score}
+                      </p>
+                      <p className={`text-sm lg:text-base ${config.textColor} opacity-70 font-medium mt-1`}>
+                        PUNTOS
+                      </p>
+                    </motion.div>
                   </motion.div>
-                );
-              })}
-            </div>
+
+                  {/* Podium Base */}
+                  <div className={`${config.podiumHeight} bg-gradient-to-b ${config.bgGradient} relative overflow-hidden`}>
+                    {/* Rank Number */}
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <span className={`font-display text-[10rem] lg:text-[14rem] ${config.numberColor} opacity-30`}>
+                        {actualRank}
+                      </span>
+                    </div>
+                    {/* Shine effect */}
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer" 
+                         style={{ backgroundSize: '200% 100%' }} />
+                  </div>
+                </motion.div>
+              );
+            })}
           </AnimatePresence>
         </div>
       </div>
@@ -261,7 +274,7 @@ export const Scoreboard = () => {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.5 }}
-        className="text-center mt-8 lg:mt-12"
+        className="text-center mt-8"
       >
         {lastUpdate && (
           <p className="text-muted-foreground text-base lg:text-lg">
