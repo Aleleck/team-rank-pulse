@@ -2,20 +2,17 @@ import { useEffect, useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Papa from 'papaparse';
 import { Trophy, Medal, Award } from 'lucide-react';
-import brazilFlag from '@/assets/flags/brazil.png';
-import colombiaFlag from '@/assets/flags/colombia.png';
-import haitiFlag from '@/assets/flags/haiti.png';
 
 const TEAM_FLAGS: Record<string, string> = {
-  'Mesa 1': brazilFlag,
-  'Mesa 2': colombiaFlag,
-  'Mesa 3': haitiFlag,
+  'Brazil': '/flags/brazil.png',
+  'Colombia': '/flags/colombia.png',
+  'Haiti': '/flags/haiti.png',
 };
 
-const TEAM_COUNTRIES: Record<string, string> = {
-  'Mesa 1': 'BRASIL',
-  'Mesa 2': 'COLOMBIA',
-  'Mesa 3': 'HAITÍ',
+const TEAM_MESA: Record<string, string> = {
+  'Brazil': 'MESA 1',
+  'Colombia': 'MESA 2',
+  'Haiti': 'MESA 3',
 };
 
 interface Team {
@@ -184,6 +181,9 @@ export const Scoreboard = () => {
 
   return (
     <div className="min-h-screen scoreboard-bg flex flex-col p-8 lg:p-12">
+      {/* Space background stars */}
+      <div className="stars" />
+      <div className="stars-2" />
       {/* Header */}
       <motion.header 
         initial={{ opacity: 0, y: -50 }}
@@ -194,16 +194,6 @@ export const Scoreboard = () => {
         <h1 className="font-display text-6xl lg:text-8xl xl:text-9xl text-foreground tracking-wider text-glow-gold">
           MUNDIAL GLOBAL
         </h1>
-        <div className="flex items-center justify-center gap-3 mt-4">
-          <motion.div 
-            animate={{ scale: [1, 1.2, 1] }}
-            transition={{ repeat: Infinity, duration: 2 }}
-            className="w-3 h-3 rounded-full bg-green-500"
-          />
-          <p className="text-muted-foreground text-lg lg:text-xl font-medium">
-            Actualización automática cada 5 segundos
-          </p>
-        </div>
       </motion.header>
 
       {/* Podium */}
@@ -242,11 +232,13 @@ export const Scoreboard = () => {
                     {/* Flag */}
                     {TEAM_FLAGS[team.name] && (
                       <div className="mb-4 flex justify-center">
-                        <img 
-                          src={TEAM_FLAGS[team.name]} 
-                          alt={TEAM_COUNTRIES[team.name] || team.name}
-                          className="w-24 h-16 lg:w-32 lg:h-20 object-cover rounded-lg shadow-lg border-2 border-white/30"
-                        />
+                        <div className="w-20 h-20 lg:w-28 lg:h-28 rounded-full overflow-hidden shadow-lg border-4 border-white/40 bg-white/10">
+                          <img 
+                            src={TEAM_FLAGS[team.name]} 
+                            alt={team.name}
+                            className="w-full h-full object-cover scale-150"
+                          />
+                        </div>
                       </div>
                     )}
                     
@@ -257,12 +249,12 @@ export const Scoreboard = () => {
                     
                     {/* Country Name */}
                     <h2 className={`font-display text-3xl lg:text-5xl xl:text-6xl tracking-wider ${config.textColor} mb-1`}>
-                      {TEAM_COUNTRIES[team.name] || team.name.toUpperCase()}
+                      {team.name.toUpperCase()}
                     </h2>
                     
                     {/* Mesa Label */}
                     <p className={`text-sm lg:text-base ${config.textColor} opacity-60 font-medium mb-2`}>
-                      {team.name}
+                      {TEAM_MESA[team.name] || ''}
                     </p>
                     
                     {/* Score */}
