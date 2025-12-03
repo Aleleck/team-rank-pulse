@@ -139,7 +139,9 @@ export const Scoreboard = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
+  const [changedScores, setChangedScores] = useState<Set<string>>(new Set());
   const previousFirstPlace = useRef<string | null>(null);
+  const previousScores = useRef<Record<string, number>>({});
 
   const fetchData = useCallback(async () => {
     try {
@@ -173,6 +175,22 @@ export const Scoreboard = () => {
               fireCelebration();
             }
             previousFirstPlace.current = newFirstPlace;
+            
+            // Track which scores actually changed
+            const newChangedScores = new Set<string>();
+            sortedTeams.forEach((team) => {
+              if (previousScores.current[team.name] !== undefined && 
+                  previousScores.current[team.name] !== team.score) {
+                newChangedScores.add(team.name);
+              }
+              previousScores.current[team.name] = team.score;
+            });
+            
+            if (newChangedScores.size > 0) {
+              setChangedScores(newChangedScores);
+              // Clear changed scores after animation completes
+              setTimeout(() => setChangedScores(new Set()), 500);
+            }
             
             setTeams((prevTeams) => {
               return sortedTeams.map((team) => {
@@ -333,9 +351,8 @@ export const Scoreboard = () => {
                     
                     {/* Score */}
                     <motion.div
-                      key={team.score}
                       initial={{ scale: 1 }}
-                      animate={{ scale: [1, 1.15, 1] }}
+                      animate={changedScores.has(team.name) ? { scale: [1, 1.15, 1] } : { scale: 1 }}
                       transition={{ duration: 0.4 }}
                     >
                       <p className={`font-display text-6xl lg:text-8xl xl:text-9xl ${config.textColor}`}>
