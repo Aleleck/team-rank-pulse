@@ -186,4 +186,17 @@
     0% { transform: translate(0, 0); }
     100% { transform: translate(-50%, -50%); }
   }
+
+  @keyframes pulseSubtle {
+    0%, 100% { 
+      box-shadow: 0 0 20px rgba(239, 68, 68, 0.3);
+    }
+    50% { 
+      box-shadow: 0 0 40px rgba(239, 68, 68, 0.6);
+    }
+  }
+
+  .animate-pulse-subtle {
+    animation: pulseSubtle 2s ease-in-out infinite;
+  }
 }

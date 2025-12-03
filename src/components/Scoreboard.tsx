@@ -38,6 +38,29 @@ const RankIcon = ({ rank }: { rank: number }) => {
   }
 };
 
+const TieBadge = () => (
+  <motion.div
+    initial={{ scale: 0 }}
+    animate={{ scale: 1 }}
+    className="absolute -top-3 -right-3 z-10"
+  >
+    <motion.div
+      animate={{ 
+        scale: [1, 1.1, 1],
+        boxShadow: [
+          '0 0 10px rgba(239, 68, 68, 0.5)',
+          '0 0 20px rgba(239, 68, 68, 0.8)',
+          '0 0 10px rgba(239, 68, 68, 0.5)'
+        ]
+      }}
+      transition={{ duration: 1.5, repeat: Infinity }}
+      className="bg-red-500 text-white font-display text-sm lg:text-base px-3 py-1 rounded-full shadow-lg"
+    >
+      ¡EMPATE!
+    </motion.div>
+  </motion.div>
+);
+
 const getRankConfig = (rank: number) => {
   switch (rank) {
     case 1:
@@ -215,6 +238,16 @@ export const Scoreboard = () => {
 
   // Reorder for podium display: 2nd, 1st, 3rd
   const podiumOrder = [1, 0, 2].map(i => teams[i]).filter(Boolean);
+  
+  // Detect ties - find teams with same score
+  const tiedScores = new Set<number>();
+  const scoreCounts: Record<number, number> = {};
+  teams.forEach(t => {
+    scoreCounts[t.score] = (scoreCounts[t.score] || 0) + 1;
+  });
+  Object.entries(scoreCounts).forEach(([score, count]) => {
+    if (count > 1) tiedScores.add(Number(score));
+  });
 
   return (
     <div className="min-h-screen scoreboard-bg flex flex-col p-8 lg:p-12">
@@ -240,6 +273,7 @@ export const Scoreboard = () => {
             {podiumOrder.map((team, displayIndex) => {
               const actualRank = teams.indexOf(team) + 1;
               const config = getRankConfig(actualRank);
+              const isTied = tiedScores.has(team.score);
               
               return (
                 <motion.div
@@ -262,10 +296,13 @@ export const Scoreboard = () => {
                 >
                   {/* Team Info Card */}
                   <motion.div 
-                    className={`bg-gradient-to-b ${config.bgGradient} rounded-t-3xl ${config.glowColor} p-6 lg:p-8 text-center`}
+                    className={`relative bg-gradient-to-b ${config.bgGradient} rounded-t-3xl ${config.glowColor} p-6 lg:p-8 text-center ${isTied ? 'animate-pulse-subtle' : ''}`}
                     whileHover={{ scale: 1.02 }}
                     transition={{ type: "spring", stiffness: 300 }}
                   >
+                    {/* Tie Badge */}
+                    {isTied && <TieBadge />}
+                    
                     {/* Flag */}
                     {TEAM_FLAGS[team.name] && (
                       <div className="mb-4 flex justify-center">
