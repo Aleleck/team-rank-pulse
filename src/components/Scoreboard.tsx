@@ -1,7 +1,8 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Papa from 'papaparse';
 import { Trophy, Medal, Award } from 'lucide-react';
+import confetti from 'canvas-confetti';
 
 const TEAM_FLAGS: Record<string, string> = {
   'Brazil': '/flags/brazil.png',
@@ -82,11 +83,40 @@ const getRankConfig = (rank: number) => {
   }
 };
 
+const fireCelebration = () => {
+  const duration = 3000;
+  const end = Date.now() + duration;
+
+  const colors = ['#FFD700', '#FFA500', '#FF6347', '#00CED1', '#9370DB'];
+
+  (function frame() {
+    confetti({
+      particleCount: 5,
+      angle: 60,
+      spread: 55,
+      origin: { x: 0, y: 0.7 },
+      colors: colors
+    });
+    confetti({
+      particleCount: 5,
+      angle: 120,
+      spread: 55,
+      origin: { x: 1, y: 0.7 },
+      colors: colors
+    });
+
+    if (Date.now() < end) {
+      requestAnimationFrame(frame);
+    }
+  })();
+};
+
 export const Scoreboard = () => {
   const [teams, setTeams] = useState<Team[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
+  const previousFirstPlace = useRef<string | null>(null);
 
   const fetchData = useCallback(async () => {
     try {
@@ -113,6 +143,13 @@ export const Scoreboard = () => {
 
             // Sort by score descending
             const sortedTeams = [...parsedTeams].sort((a, b) => b.score - a.score);
+            
+            // Check if first place changed
+            const newFirstPlace = sortedTeams[0]?.name;
+            if (previousFirstPlace.current && newFirstPlace && newFirstPlace !== previousFirstPlace.current) {
+              fireCelebration();
+            }
+            previousFirstPlace.current = newFirstPlace;
             
             setTeams((prevTeams) => {
               return sortedTeams.map((team) => {
