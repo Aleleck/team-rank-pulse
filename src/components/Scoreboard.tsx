@@ -4,10 +4,10 @@ import Papa from 'papaparse';
 import { Trophy, Medal, Award } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
-const TEAM_FLAGS: Record<string, string> = {
-  'Brazil': '/flags/brazil.png',
-  'Colombia': '/flags/colombia.png',
-  'Haiti': '/flags/haiti.png',
+const TEAM_CRESTS: Record<string, string> = {
+  'Brazil': '/crests/brazil.png',
+  'Colombia': '/crests/colombia.png',
+  'Haiti': '/crests/haiti.png',
 };
 
 const TEAM_MESA: Record<string, string> = {
@@ -303,14 +303,14 @@ export const Scoreboard = () => {
                     {/* Tie Badge */}
                     {isTied && <TieBadge />}
                     
-                    {/* Flag */}
-                    {TEAM_FLAGS[team.name] && (
+                    {/* Team Crest */}
+                    {TEAM_CRESTS[team.name] && (
                       <div className="mb-4 flex justify-center">
-                        <div className="w-20 h-20 lg:w-28 lg:h-28 rounded-full overflow-hidden shadow-lg border-4 border-white/40 bg-white/10">
+                        <div className="w-20 h-20 lg:w-28 lg:h-28 flex items-center justify-center">
                           <img 
-                            src={TEAM_FLAGS[team.name]} 
-                            alt={team.name}
-                            className="w-full h-full object-cover scale-150"
+                            src={TEAM_CRESTS[team.name]} 
+                            alt={`${team.name} crest`}
+                            className="w-full h-full object-contain drop-shadow-lg"
                           />
                         </div>
                       </div>
