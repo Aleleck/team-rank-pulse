@@ -22,7 +22,7 @@ interface Team {
 }
 
 // PEGA AQUÍ TU URL DE APPS SCRIPT (La que termina en /exec)
-const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxy6tc2LygaAmAJYqPJensKynvRYIlGK30zDzPZw-kkpiY5-x4XBCD76qqUuG4J9Hx5/exec";
+const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzmKE9Mm5w0mOi4w4fvx4XdfonKhFSNfkjGhIoyvIpw3ZmprCCFm9bD5w6O4m1sMvYb/exec";
 const REFRESH_INTERVAL = 2000; // 2 segundos (ahora sí aguantará esta velocidad)
 
 const RankIcon = ({ rank }: { rank: number }) => {
