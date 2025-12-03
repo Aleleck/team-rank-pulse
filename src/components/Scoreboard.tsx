@@ -10,8 +10,8 @@ const TEAM_FLAGS: Record<string, string> = {
 };
 
 const TEAM_MESA: Record<string, string> = {
-  'Brazil': 'MESA 1',
-  'Colombia': 'MESA 2',
+  'Colombia': 'MESA 1',
+  'Brazil': 'MESA 2',
   'Haiti': 'MESA 3',
 };
 
